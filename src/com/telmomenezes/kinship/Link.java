@@ -4,7 +4,7 @@
 package com.telmomenezes.kinship;
 
 /**
- * @author telmo
+ * @author Telmo Menezes (telmo@telmomenezes.com)
  *
  */
 public class Link {

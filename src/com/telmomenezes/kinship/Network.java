@@ -78,6 +78,41 @@ public class Network {
 		}
 	}
 	
+	private void updateDescendents(int origId, Person targ) {
+		int targFatherId = targ.getFatherId();
+		int targMotherId = targ.getMotherId();
+		
+		if (targFatherId > 0) {
+			Person father = people.get(targFatherId);
+			father.addDescendent(origId);
+			updateDescendents(origId, father);
+		}
+		if (targMotherId > 0) {
+			Person mother = people.get(targMotherId);
+			mother.addDescendent(origId);
+			updateDescendents(origId, mother);
+		}
+	}
+	
+	public void updateDescendents(){
+		Set<Integer> keys = people.keySet();
+		for (int k : keys) {
+			Person p = people.get(k);
+			updateDescendents(p.getId(), p);
+		}
+	}
+	
+	public double getAvgDescendents() {
+		double avg = 0;
+		Set<Integer> keys = people.keySet();
+		for (int k : keys) {
+			Person p = people.get(k);
+			avg += new Double(p.getTotalDesc());
+		}
+		avg /= new Double(totalPeople);
+		return avg;
+	}
+	
 	public void load(String filePath) {
 		try{
 			FileInputStream fstream = new FileInputStream(filePath);
@@ -126,6 +161,7 @@ public class Network {
 			}
 			
 			updateDemographicMetrics();
+			updateDescendents();
 			
 			in.close();
 		}
@@ -147,5 +183,7 @@ public class Network {
 		Network net = new Network();
 		net.load("Chimane6.txt");
 		System.out.println(net);
+		double avgDesc = net.getAvgDescendents();
+		System.out.println("avg descendents: " + avgDesc);
 	}
 }

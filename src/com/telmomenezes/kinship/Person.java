@@ -3,6 +3,9 @@
  */
 package com.telmomenezes.kinship;
 
+import java.util.HashSet;
+import java.util.Set;
+
 /**
  * @author Telmo Menezes (telmo@telmomenezes.com)
  *
@@ -14,6 +17,9 @@ public class Person {
 	private int fatherId;
 	private int motherId;
 	
+	private Set<Integer> descendents;
+	private int totalDesc;
+	
 	public Person(int id, String name, String sex,
 			int fatherId, int motherId) {
 		this.id = id;
@@ -21,6 +27,18 @@ public class Person {
 		this.sex = sex;
 		this.fatherId = fatherId;
 		this.motherId = motherId;
+		
+		descendents = new HashSet<Integer>();
+		totalDesc = 0;
+	}
+	
+	public void addDescendent(int descId) {
+		descendents.add(descId);
+		totalDesc++;
+	}
+	
+	public boolean isDescendent(int descId) {
+		return descendents.contains(descId);
 	}
 	
 	public String toString() {
@@ -55,5 +73,9 @@ public class Person {
 
 	public void setMotherId(int motherId) {
 		this.motherId = motherId;
+	}
+
+	public int getTotalDesc() {
+		return totalDesc;
 	}
 }

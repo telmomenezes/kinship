@@ -10,12 +10,17 @@ package com.telmomenezes.kinship;
 public class Person {
 	private int Id;
 	private String name;
-	private char sex;
+	private String sex;
+	private int fatherId;
+	private int motherId;
 	
-	public Person(int Id, String name, char sex) {
+	public Person(int Id, String name, String sex,
+			int fatherId, int motherId) {
 		this.Id = Id;
 		this.name = name;
 		this.sex = sex;
+		this.fatherId = fatherId;
+		this.motherId = motherId;
 	}
 	
 	public int getId() {
@@ -26,7 +31,23 @@ public class Person {
 		return name;
 	}
 	
-	public char getSex() {
+	public String getSex() {
 		return sex;
+	}
+
+	public int getFatherId() {
+		return fatherId;
+	}
+
+	public void setFatherId(int fatherId) {
+		this.fatherId = fatherId;
+	}
+
+	public int getMotherId() {
+		return motherId;
+	}
+
+	public void setMotherId(int motherId) {
+		this.motherId = motherId;
 	}
 }

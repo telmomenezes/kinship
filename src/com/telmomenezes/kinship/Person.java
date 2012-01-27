@@ -8,23 +8,29 @@ package com.telmomenezes.kinship;
  *
  */
 public class Person {
-	private int Id;
+	private int id;
 	private String name;
 	private String sex;
 	private int fatherId;
 	private int motherId;
 	
-	public Person(int Id, String name, String sex,
+	public Person(int id, String name, String sex,
 			int fatherId, int motherId) {
-		this.Id = Id;
+		this.id = id;
 		this.name = name;
 		this.sex = sex;
 		this.fatherId = fatherId;
 		this.motherId = motherId;
 	}
 	
+	public String toString() {
+		String str = "name: " + name + "; sex: " + sex
+				+ "; father: " + fatherId + "; mother: " + motherId;
+		return str;
+	}
+	
 	public int getId() {
-		return Id;
+		return id;
 	}
 	
 	public String getName() {

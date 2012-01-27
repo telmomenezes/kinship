@@ -9,6 +9,7 @@ import java.io.FileInputStream;
 import java.io.InputStreamReader;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * @author Telmo Menezes (telmo@telmomenezes.com)
@@ -16,9 +17,65 @@ import java.util.Map;
  */
 public class Network {
 	private Map<Integer, Person> people;
+	private int totalPeople;
+	private int menCount;
+	private int womenCount;
+	private int mm;
+	private int mw;
+	private int wm;
+	private int ww;
+	
 	
 	public Network() {
 		people = new HashMap<Integer, Person>();
+		totalPeople = 0;
+		menCount = 0;
+		womenCount = 0;
+		mm = 0;
+		mw = 0;
+		wm = 0;
+		ww = 0;
+	}
+	
+	public void addPerson(int id, String name, String sex,
+			int fatherId, int motherId) {
+		Person person = new Person(id, name, sex,
+				fatherId, motherId);
+		people.put(id, person);
+		
+		totalPeople++;
+		if (sex.equals("H")) {
+			menCount++;
+		}
+		else if (sex.equals("F")) {
+			womenCount++;
+		}
+	}
+	
+	public void updateDemographicMetrics(){
+		Set<Integer> keys = people.keySet();
+		for (int k : keys) {
+			Person child = people.get(k);
+			String childSex = child.getSex();
+			int fatherId = child.getFatherId();
+			int motherId = child.getMotherId();
+			if (fatherId > 0) {
+				if (childSex.equals("H")) {
+					mm++;
+				}
+				else if (childSex.equals("F")) {
+					mw++;
+				}
+			}
+			if (motherId > 0) {
+				if (childSex.equals("H")) {
+					wm++;
+				}
+				else if (childSex.equals("F")) {
+					ww++;
+				}
+			}
+		}
 	}
 	
 	public void load(String filePath) {
@@ -59,15 +116,16 @@ public class Network {
 					case 4:
 						motherId = new Integer(t);
 						break;
+					default:
+						break;
 					}
-					
-					Person person = new Person(id, name, sex,
-							fatherId, motherId);
-					people.put(id, person);
-					
 					row++;
 				}
+				
+				addPerson(id, name, sex, fatherId, motherId);
 			}
+			
+			updateDemographicMetrics();
 			
 			in.close();
 		}
@@ -76,9 +134,18 @@ public class Network {
 		}
 	}
 	
+	public String toString() {
+		String str = "";
+		str += "total people:" + totalPeople + 
+				"; men: " + menCount + "; women: " + womenCount + "\n";
+		str += "mm: " + mm + "; mw: " + mw
+				+ "; wm: " + wm + "; ww: " + ww + "\n";
+		return str;
+	}
+	
 	public static void main(String args[]) {
 		Network net = new Network();
 		net.load("Chimane6.txt");
-		System.out.println("done.");
+		System.out.println(net);
 	}
 }

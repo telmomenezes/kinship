@@ -75,7 +75,8 @@ class Network {
 	def load(filePath: String) = {
 		var firstLine = true
 		
-		for(line <- Source.fromFile(filePath).getLines()) {
+		val s = Source.fromFile(filePath)
+  		s.getLines.foreach ( (line) => {
   			// skip header row
   			if (firstLine) {
   				firstLine = false
@@ -104,10 +105,10 @@ class Network {
 				
 				addPerson(id, name, sex, fatherId, motherId)
 			}
+		})
 			
-			updateDemographicMetrics()
-			updateDescendents()
-		}
+		updateDemographicMetrics()
+		updateDescendents()
 	}
 	
 	override def toString: String = {
@@ -116,14 +117,14 @@ class Network {
 		str += "mm: " + mm + "; mw: " + mw + "; wm: " + wm + "; ww: " + ww + "\n"
 		str
 	}
-	
-	/*
-	public static void main(String args[]) {
-		Network net = new Network();
-		net.load("Chimane6.txt");
-		System.out.println(net);
-		double avgDesc = net.getAvgDescendents();
-		System.out.println("avg descendents: " + avgDesc);
+}
+
+object Network {
+	def main(args: Array[String]) {
+		val net = new Network
+		net.load("Chimane6.txt")
+		println(net)
+		val avgDesc = net.avgDescendents 
+		println("avg descendents: " + avgDesc)
 	}
-	*/
 }

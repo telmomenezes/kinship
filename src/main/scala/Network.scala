@@ -66,8 +66,10 @@ class Network {
 	
 	def avgDescendents: Double = {
 		var avg = 0.0
-		for ((key, p) <- people)
+		for ((key, p) <- people) {
 			avg += p.totalDesc
+		}
+		println(avg)
 		avg /= totalPeople
 		avg
 	}
@@ -112,10 +114,8 @@ class Network {
 	}
 	
 	override def toString: String = {
-		var str = ""
-		str += "total people:" + totalPeople + "; men: " + menCount + "; women: " + womenCount + "\n"
-		str += "mm: " + mm + "; mw: " + mw + "; wm: " + wm + "; ww: " + ww + "\n"
-		str
+		"total people:" + totalPeople + "; men: " + menCount + "; women: " + womenCount + "\n" +
+		"mm: " + mm + "; mw: " + mw + "; wm: " + wm + "; ww: " + ww + "\n"
 	}
 }
 

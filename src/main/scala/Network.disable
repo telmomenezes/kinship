@@ -1,58 +1,36 @@
-/**
- * 
- */
-package com.telmomenezes.kinship;
+package kinship
 
-import java.io.BufferedReader;
-import java.io.DataInputStream;
-import java.io.FileInputStream;
-import java.io.InputStreamReader;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
+import java.io.BufferedReader
+import java.io.DataInputStream
+import java.io.FileInputStream
+import java.io.InputStreamReader
+import java.util.HashMap
+import java.util.Map
+import java.util.Set
 
-/**
- * @author Telmo Menezes (telmo@telmomenezes.com)
- *
- */
-public class Network {
-	private Map<Integer, Person> people;
-	private int totalPeople;
-	private int menCount;
-	private int womenCount;
-	private int mm;
-	private int mw;
-	private int wm;
-	private int ww;
+
+class Network {
+	private val people = new Map[Int, Person]
+	private var totalPeople = 0
+	private var menCount = 0
+	private var womenCount = 0
+	private var mm = 0
+	private var mw = 0
+	private var wm = 0
+	private var ww = 0
 	
-	
-	public Network() {
-		people = new HashMap<Integer, Person>();
-		totalPeople = 0;
-		menCount = 0;
-		womenCount = 0;
-		mm = 0;
-		mw = 0;
-		wm = 0;
-		ww = 0;
-	}
-	
-	public void addPerson(int id, String name, String sex,
-			int fatherId, int motherId) {
-		Person person = new Person(id, name, sex,
-				fatherId, motherId);
-		people.put(id, person);
+	def addPerson(id: Int, name: String, sex: String, fatherId: Int, motherId: Int) {
+		val person = new Person(id, name, sex, fatherId, motherId)
+		people.put(id, person)
 		
-		totalPeople++;
-		if (sex.equals("H")) {
-			menCount++;
-		}
-		else if (sex.equals("F")) {
-			womenCount++;
-		}
+		totalPeople += 1
+		if (sex == "H")
+			menCount += 1
+		else if (sex == "F")
+			womenCount += 1
 	}
 	
-	public void updateDemographicMetrics(){
+	def updateDemographicMetrics {
 		Set<Integer> keys = people.keySet();
 		for (int k : keys) {
 			Person child = people.get(k);

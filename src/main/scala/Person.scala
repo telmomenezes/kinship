@@ -1,79 +1,21 @@
-/**
- * 
- */
-package com.telmomenezes.kinship;
+package kinship
 
-import java.util.HashSet;
-import java.util.Set;
 
-/**
- * @author Telmo Menezes (telmo@telmomenezes.com)
- *
- */
-public class Person {
-	private int id;
-	private String name;
-	private String sex;
-	private int fatherId;
-	private int motherId;
+class Person(id: Int, name: String, sex: String, fatherId: Int, motherId: Int) {
 	
-	private Set<Integer> descendents;
-	private int totalDesc;
+	val descendents = new Set[Int]
+	var totalDesc = 0
 	
-	public Person(int id, String name, String sex,
-			int fatherId, int motherId) {
-		this.id = id;
-		this.name = name;
-		this.sex = sex;
-		this.fatherId = fatherId;
-		this.motherId = motherId;
-		
-		descendents = new HashSet<Integer>();
-		totalDesc = 0;
+	def addDescendent(descId: Int) {
+		descendents += descId)
+		totalDesc += 1
 	}
 	
-	public void addDescendent(int descId) {
-		descendents.add(descId);
-		totalDesc++;
+	def isDescendent(descId: Int): Boolean {
+		descendents.contains(descId)
 	}
 	
-	public boolean isDescendent(int descId) {
-		return descendents.contains(descId);
-	}
-	
-	public String toString() {
-		return "name: " + name + "; sex: " + sex + "; father: " + fatherId + "; mother: " + motherId;
-	}
-	
-	public int getId() {
-		return id;
-	}
-	
-	public String getName() {
-		return name;
-	}
-	
-	public String getSex() {
-		return sex;
-	}
-
-	public int getFatherId() {
-		return fatherId;
-	}
-
-	public void setFatherId(int fatherId) {
-		this.fatherId = fatherId;
-	}
-
-	public int getMotherId() {
-		return motherId;
-	}
-
-	public void setMotherId(int motherId) {
-		this.motherId = motherId;
-	}
-
-	public int getTotalDesc() {
-		return totalDesc;
+	override def toString: String {
+		"name: " + name + "; sex: " + sex + "; father: " + fatherId + "; mother: " + motherId
 	}
 }

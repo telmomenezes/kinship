@@ -42,9 +42,7 @@ public class Person {
 	}
 	
 	public String toString() {
-		String str = "name: " + name + "; sex: " + sex
-				+ "; father: " + fatherId + "; mother: " + motherId;
-		return str;
+		return "name: " + name + "; sex: " + sex + "; father: " + fatherId + "; mother: " + motherId;
 	}
 	
 	public int getId() {

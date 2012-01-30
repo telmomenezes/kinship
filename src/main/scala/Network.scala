@@ -107,9 +107,9 @@ public class Network {
 		Set<Integer> keys = people.keySet();
 		for (int k : keys) {
 			Person p = people.get(k);
-			avg += new Double(p.getTotalDesc());
+			avg += p.getTotalDesc();
 		}
-		avg /= new Double(totalPeople);
+		avg /= totalPeople;
 		return avg;
 	}
 	
@@ -122,7 +122,7 @@ public class Network {
 			String strLine;
 			
 			// skip header row
-			strLine = br.readLine();
+			br.readLine();
 			
 			// parse rows
 			while ((strLine = br.readLine()) != null)   {

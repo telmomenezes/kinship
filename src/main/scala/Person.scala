@@ -4,8 +4,8 @@ package kinship
 import scala.collection.mutable.Set
 
 
-class Person(id: Int, name: String, sex: String, fatherId: Int, motherId: Int) {
-	
+class Person(val id: Int, val name: String, val sex: String, val fatherId: Int, val motherId: Int) {
+
 	val descendents = Set[Int]()
 	var totalDesc = 0
 	

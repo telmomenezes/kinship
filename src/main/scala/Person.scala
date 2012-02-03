@@ -1,11 +1,16 @@
-package kinship
+package com.telmomenezes.kinship
 
 
 import scala.collection.mutable.Set
 
 
-class Person(val id: Int, val name: String, val sex: String, val fatherId: Int, val motherId: Int) {
-
+class Person(data: Array[String]) {
+	val id = data(0).toInt
+	val name = data(1)
+	val sex = data(2)
+	val fatherId = data(3).toInt 
+	val motherId = data(4).toInt
+	
 	val descendents = Set[Int]()
 	
 	def addDescendent(descId: Int) = descendents += descId

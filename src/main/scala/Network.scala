@@ -15,25 +15,32 @@ class Network (peopleList: List[Array[String]]) {
 
   val rand = new Random()
 
-  def updateDescendents(origId: Int, targ: Person): Unit = {
-    val targFatherId = targ.fatherId
-    val targMotherId = targ.motherId
+  def updateDescendents(origId: Int, targ: Person, visited: List[Int]): Unit = {
+    if (!(visited contains targ.id)) {
+      val targFatherId = targ.fatherId
+      val targMotherId = targ.motherId
     
-    if (targFatherId > 0) {
-      val father = people(targFatherId)
-      father.addDescendent(origId)
-      updateDescendents(origId, father)
-    }
-    if (targMotherId > 0) {
-      val mother = people(targMotherId)
-      mother.addDescendent(origId)
-      updateDescendents(origId, mother)
+      if (targFatherId > 0) {
+        val father = people(targFatherId)
+        father.addDescendent(origId)
+        updateDescendents(origId, father, targ.id :: visited)
+      }
+      if (targMotherId > 0) {
+        val mother = people(targMotherId)
+        mother.addDescendent(origId)
+        updateDescendents(origId, mother, targ.id :: visited)
+      }
     }
   }
 
   def updateDescendents(): Unit = {
     for ((key, p) <- people)
-      updateDescendents(p.id, p)
+      updateDescendents(p.id, p, Nil)
+  }
+
+  def clearDescendents(): Unit = {
+    for (p <- people.values)
+      p.clearDescendents()
   }
   
   def avgDescendents: Double = {
@@ -90,6 +97,12 @@ class Network (peopleList: List[Array[String]]) {
     true
   }
 
+  def checkLoops: Boolean = {
+    for (p <- people.values)
+      if (!p.checkLoops) return false
+    return true
+  }
+
   def swap(k: Int): Boolean = {
     val oldEdges = randomEdgeList(k)
     val newEdges = swappedEdgeList(oldEdges)
@@ -109,6 +122,19 @@ class Network (peopleList: List[Array[String]]) {
       println("FAIL: parent overlap")
       return false
     }
+
+    addEdges(newEdges)
+
+    clearDescendents()
+    updateDescendents()
+
+    // check loops
+    if (!checkLoops) {
+      println("FAIL: loops")
+      return false
+    }
+
+    replaceEdges(oldEdges, newEdges)
 
     println("SUCCESS")
     true
@@ -134,6 +160,6 @@ object Network {
     println("avg descendents: " + n.avgDescendents)
     println("edge count: " + n.edges.size)
 
-    println(n.swap(4))
+    println(n.swap(10))
   }
 }

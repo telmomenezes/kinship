@@ -1,5 +1,7 @@
 package com.telmomenezes.kinship
 
+import scala.io.Source
+import scala.util.Random
 
 class Network (peopleList: List[Array[String]]) {
   val people: Map[Int, Person] = (for (item <- peopleList) yield (item(0).toInt, new Person(item))).toMap
@@ -10,6 +12,8 @@ class Network (peopleList: List[Array[String]]) {
   
   val edges = ((for (p <- people.values if p.fatherId > 0) yield (p.fatherId, p.id))
     ++ (for (p <- people.values if p.motherId > 0) yield (p.motherId, p.id))).toArray
+
+  val rand = new Random()
 
   def updateDescendents(origId: Int, targ: Person): Unit = {
     val targFatherId = targ.fatherId
@@ -39,13 +43,81 @@ class Network (peopleList: List[Array[String]]) {
     avg
   }
   
+  def randomEdgeList(k: Int): List[(Int, Int)] = (for (i <- 0 until k) yield edges(rand.nextInt(edges.size))).toList
+
+  def swappedEdgeList(edgeList: List[(Int, Int)]) = {
+    val k = edgeList.size
+    val shuffleTargs = rand.shuffle((0 until k).toList)
+    (for (i <- 0 until k) yield (edgeList(i)._1, edgeList(shuffleTargs(i))._2)).toList
+  }
+
+  def edgeListDemog(edgeList: List[(Int, Int)]) = {
+    val hh = edgeList.count(e => (people(e._1).sex == "H") && (people(e._2).sex == "H"))
+    val hf = edgeList.count(e => (people(e._1).sex == "H") && (people(e._2).sex == "F"))
+    val fh = edgeList.count(e => (people(e._1).sex == "F") && (people(e._2).sex == "H"))
+    val ff = edgeList.count(e => (people(e._1).sex == "F") && (people(e._2).sex == "F"))
+    (hh, hf, fh, ff)
+  }
+
+  def replaceEdges(oldEdges: List[(Int, Int)], newEdges: List[(Int, Int)]) = {
+    // update edge array
+    for (i <- 0 until edges.size)
+      for (j <- 0 until oldEdges.size)
+        if (edges(i) == oldEdges(j)) edges(i) = newEdges(j)
+  }
+
+  def removeEdges(oldEdges: List[(Int, Int)]) = {
+    for ((parentId, childId) <- oldEdges)
+      if (people(childId).fatherId == parentId) people(childId).fatherId = 0
+      else if (people(childId).motherId == parentId) people(childId).motherId = 0
+  }
+
+  def addEdges(newEdges: List[(Int, Int)]) = {
+    for ((parentId, childId) <- newEdges)
+      if (people(parentId).sex == "H") people(childId).fatherId = parentId
+      else if (people(parentId).sex == "F") people(childId).motherId = parentId
+  }
+
+  def parentOverlap(newEdges: List[(Int, Int)]): Boolean = {
+    for ((parentId, childId) <- newEdges)
+      if (people(parentId).sex == "H")
+        if (people(childId).fatherId > 0)
+          return false
+      else if (people(parentId).sex == "F")
+        if (people(childId).motherId > 0)
+          return false
+
+    true
+  }
+
+  def swap(k: Int): Boolean = {
+    val oldEdges = randomEdgeList(k)
+    val newEdges = swappedEdgeList(oldEdges)
+    
+    // maintain demographic constraints
+    val oldDemog = edgeListDemog(oldEdges)
+    val newDemog = edgeListDemog(newEdges)
+    if (oldDemog != newDemog) {
+      println("FAIL: demographic constraints")
+      return false
+    }
+
+    removeEdges(oldEdges)
+
+    // parent overlap
+    if (parentOverlap(newEdges)) {
+      println("FAIL: parent overlap")
+      return false
+    }
+
+    println("SUCCESS")
+    true
+  }
+
   override def toString: String = {
     "total people:" + totalPeople + "; men: " + menCount + "; women: " + womenCount + "\n"
   }
 }
-
-
-import scala.io.Source
 
 object Network {
   def net(filePath: String): Network = {
@@ -61,5 +133,7 @@ object Network {
     println(n)
     println("avg descendents: " + n.avgDescendents)
     println("edge count: " + n.edges.size)
+
+    println(n.swap(4))
   }
 }

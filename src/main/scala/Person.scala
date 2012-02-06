@@ -8,12 +8,9 @@ class Person(data: Array[String]) {
 	val id = data(0).toInt
 	val name = data(1)
 	val sex = data(2)
-	val fatherId = data(3).toInt 
-	val motherId = data(4).toInt
-	val parentCount = if ((fatherId > 0) && (motherId > 0)) 2
-		else if (fatherId > 0) 1
-		else if (motherId > 0) 1
-		else 0
+	
+	var fatherId = data(3).toInt 
+	var motherId = data(4).toInt
 
 	val descendents = Set[Int]()
 	

@@ -24,6 +24,10 @@ class Person(data: Array[String]) {
 	
 	def checkLoops: Boolean = (!(descendents contains fatherId)) && (!(descendents contains motherId))
 
+	def toFileLine: String  = {
+		"" + id + "\t" + name + "\t" + sex + "\t" + fatherId + "\t" + motherId
+	}
+
 	override def toString: String  = {
 		"name: " + name + "; sex: " + sex + "; father: " + fatherId + "; mother: " + motherId
 	}

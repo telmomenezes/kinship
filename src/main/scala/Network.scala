@@ -1,5 +1,6 @@
 package com.telmomenezes.kinship
 
+import com.telmomenezes.Aux._
 import scala.io.Source
 import scala.util.Random
 
@@ -157,9 +158,18 @@ class Network (peopleList: List[Array[String]]) {
   }
 
   def shuffle(k: Int) = {
-    for (i <- 1 to 1000) {
+    val n = edges.size / k
+    for (i <- 1 to n) {
       println("swap #" + i + " [" + swap(k) + "]")
     }
+  }
+
+  def save(filePath: String) = {
+    import java.io._
+    val data = ("Id\tNom\tSexe\tpére\tmére\tconjoint") :: (for (p <- people.values) yield p.toFileLine).toList
+    printToFile(new File(filePath))(p => {
+      data.foreach(p.println)
+    })
   }
 
   override def toString: String = {
@@ -182,10 +192,12 @@ object Network {
     println("avg descendents: " + n.avgDescendents)
     println("edge count: " + n.edges.size)
 
-    n.shuffle(4)
+    n.shuffle(8)
 
     println(n)
     println("avg descendents: " + n.avgDescendents)
     println("edge count: " + n.edges.size)
+
+    n.save("test.txt")
   }
 }

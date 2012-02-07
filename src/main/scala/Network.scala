@@ -103,7 +103,7 @@ class Network (peopleList: List[Array[String]]) {
     return true
   }
 
-  def swap(k: Int): Boolean = {
+  def randomSwap(k: Int): Boolean = {
     val oldEdges = randomEdgeList(k)
     val newEdges = swappedEdgeList(oldEdges)
     
@@ -111,7 +111,7 @@ class Network (peopleList: List[Array[String]]) {
     val oldDemog = edgeListDemog(oldEdges)
     val newDemog = edgeListDemog(newEdges)
     if (oldDemog != newDemog) {
-      println("FAIL: demographic constraints")
+      //println("FAIL: demographic constraints")
       return false
     }
 
@@ -119,7 +119,9 @@ class Network (peopleList: List[Array[String]]) {
 
     // parent overlap
     if (parentOverlap(newEdges)) {
-      println("FAIL: parent overlap")
+      //println("FAIL: parent overlap")
+      // restore initil state
+      addEdges(oldEdges)
       return false
     }
 
@@ -130,14 +132,34 @@ class Network (peopleList: List[Array[String]]) {
 
     // check loops
     if (!checkLoops) {
-      println("FAIL: loops")
+      //println("FAIL: loops")
+      // restore initil state
+      removeEdges(newEdges)
+      addEdges(oldEdges)
+      clearDescendents()
+      updateDescendents()
       return false
     }
 
     replaceEdges(oldEdges, newEdges)
 
-    println("SUCCESS")
     true
+  }
+
+  def swap(k: Int): Int = {
+    var count = 0
+    while (true) {
+      count += 1
+      if (randomSwap(k)) return count
+    }
+
+    -1
+  }
+
+  def shuffle(k: Int) = {
+    for (i <- 1 to 1000) {
+      println("swap #" + i + " [" + swap(k) + "]")
+    }
   }
 
   override def toString: String = {
@@ -160,6 +182,10 @@ object Network {
     println("avg descendents: " + n.avgDescendents)
     println("edge count: " + n.edges.size)
 
-    println(n.swap(10))
+    n.shuffle(4)
+
+    println(n)
+    println("avg descendents: " + n.avgDescendents)
+    println("edge count: " + n.edges.size)
   }
 }

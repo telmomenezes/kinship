@@ -126,6 +126,15 @@ class Network (val people: Map[Int, Person]) {
         if (edges(i) == oldEdges(j)) edges(i) = newEdges(j)
   }
 
+  def markSwaps(oldEdges: List[(Int, Int)], newEdges: List[(Int, Int)]) = {
+    // update edge array
+    for (i <- 0 until oldEdges.size) {
+      if (oldEdges(i)._2 != newEdges(i)._2) {
+        people(oldEdges(i)._1).swap = true
+      }
+    }
+  }
+
   def removeEdges(oldEdges: List[(Int, Int)]) = {
     for (e <- oldEdges) {
       val childId = e._2
@@ -207,9 +216,10 @@ class Network (val people: Map[Int, Person]) {
 
     //println(oldSibCounts)
     //println(newSibCounts)
-    if (oldSibCounts != newSibCounts) return (initNet, false)
+    //if (oldSibCounts != newSibCounts) return (initNet, false)
 
     replaceEdges(oldEdges, newEdges)
+    markSwaps(oldEdges, newEdges)
 
     (this, true)
   }
@@ -234,7 +244,7 @@ class Network (val people: Map[Int, Person]) {
     for (i <- 1 to n) {
       val res = net.swap(k)
       net = res._1
-      println("swap #" + i + " [" + res._2 + "]")
+      println("swap #" + i + " [" + res._2 + "] total swaps: " + net.totalSwaps)
     }
     net
   }
@@ -278,6 +288,8 @@ class Network (val people: Map[Int, Person]) {
 
     return true
   }
+
+  def totalSwaps: Int = people.count(p => p._2.swap)
 }
 
 object Network {

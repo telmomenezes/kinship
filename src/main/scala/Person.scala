@@ -4,17 +4,21 @@ package com.telmomenezes.kinship
 import scala.collection.mutable.Set
 
 
-class Person(data: Array[String]) {
-	val id = data(0).toInt
-	val name = data(1)
-	val sex = data(2)
-
-	var fatherId = data(3).toInt 
-	var motherId = data(4).toInt
-
+class Person(val id: Int, val name: String, val sex: String, var fatherId: Int, var motherId: Int) {
 	var children = Set[Int]()
 	var descendents = Set[Int]()
 	var siblings = Set[Int]()
+
+	def this(p: Person) = this(p.id, p.name, p.sex, p.fatherId, p.motherId)
+	def this(data: Array[String]) = this(data(0).toInt, data(1), data(2), data(3).toInt, data(4).toInt)
+
+	override def equals(other: Any) = {
+		other match {
+			case that: Person => this.id == that.id && this.sex == that.sex &&
+				this.fatherId == that.fatherId && this.motherId == that.motherId
+			case _ => false
+		}
+	}
 
 	def addChild(childId: Int) = children += childId
 	def isChild(childId: Int): Boolean = children.contains(childId)

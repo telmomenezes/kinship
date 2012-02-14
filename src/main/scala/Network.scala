@@ -5,8 +5,7 @@ import scala.io.Source
 import scala.util.Random
 import scala.collection.mutable.{Map => MMap}
 
-class Network (peopleList: List[Array[String]]) {
-  val people: Map[Int, Person] = (for (item <- peopleList) yield (item(0).toInt, new Person(item))).toMap
+class Network (val people: Map[Int, Person]) {
   val totalPeople = people.size
   
   val menCount = people.values.count(p => p.sex == "H")
@@ -17,12 +16,29 @@ class Network (peopleList: List[Array[String]]) {
 
   val rand = new Random()
 
+  updateChildren()
+  updateSiblings()
+  updateDescendents()
+
+  def this(peopleList: List[Array[String]]) = this((for (item <- peopleList) yield (item(0).toInt, new Person(item))).toMap)
+
+  def this(net: Network) = this((for (p <- net.people) yield (p._1, new Person(p._2))).toMap)
+
+  override def equals(other: Any) = {
+    other match {
+      case that: Network => this.people == that.people
+      case _ => false
+    }
+  }
+
   def updateChildren() = {
     for (p <- people.values) {
       if (p.fatherId > 0) people(p.fatherId).addChild(p.id)
       if (p.motherId > 0) people(p.motherId).addChild(p.id)
     }
   }
+
+  def clearChildren() = for (p <- people.values) p.clearChildren()
 
   def updateDescendents(origId: Int, targ: Person, visited: List[Int]): Unit = {
     if (!(visited contains targ.id)) {
@@ -47,10 +63,7 @@ class Network (peopleList: List[Array[String]]) {
       updateDescendents(p.id, p, Nil)
   }
 
-  def clearDescendents(): Unit = {
-    for (p <- people.values)
-      p.clearDescendents()
-  }
+  def clearDescendents() = for (p <- people.values) p.clearDescendents()
 
   def updateSiblings() = {
     for (p <- people.values) {
@@ -71,10 +84,7 @@ class Network (peopleList: List[Array[String]]) {
     }
   }
 
-  def clearSiblings() = {
-    for (p <- people.values)
-      p.clearSiblings()
-  }
+  def clearSiblings() = for (p <- people.values) p.clearSiblings()
   
   def sibCounts: MMap[Int, Int] = {
     val map = MMap[Int, Int]()
@@ -117,27 +127,41 @@ class Network (peopleList: List[Array[String]]) {
   }
 
   def removeEdges(oldEdges: List[(Int, Int)]) = {
-    for ((parentId, childId) <- oldEdges)
+    for (e <- oldEdges) {
+      val childId = e._2
+      val parentId = e._1
       if (people(childId).fatherId == parentId) people(childId).fatherId = 0
       else if (people(childId).motherId == parentId) people(childId).motherId = 0
+      else {
+        println(people(parentId))
+        println(people(childId))
+        println(e)
+        assert(false)
+      }
+    }
   }
 
   def addEdges(newEdges: List[(Int, Int)]) = {
-    for ((parentId, childId) <- newEdges)
+    for (e <- newEdges) {
+      val childId = e._2
+      val parentId = e._1
       if (people(parentId).sex == "H") people(childId).fatherId = parentId
       else if (people(parentId).sex == "F") people(childId).motherId = parentId
+      else assert(false)
+    }
   }
 
   def parentOverlap(newEdges: List[(Int, Int)]): Boolean = {
-    for ((parentId, childId) <- newEdges)
+    for (e <- newEdges) {
+      val parentId = e._1
+      val childId = e._2
       if (people(parentId).sex == "H")
-        if (people(childId).fatherId > 0)
-          return false
+        if (people(childId).fatherId > 0) return true
       else if (people(parentId).sex == "F")
-        if (people(childId).motherId > 0)
-          return false
+        if (people(childId).motherId > 0) return true
+    }
 
-    true
+    false
   }
 
   def checkLoops: Boolean = {
@@ -146,27 +170,26 @@ class Network (peopleList: List[Array[String]]) {
     return true
   }
 
-  def randomSwap(k: Int): Boolean = {
+  def randomSwap(k: Int): (Network, Boolean) = {
+    val initNet = new Network(this)
+
     val oldEdges = randomEdgeList(k)
     val newEdges = swappedEdgeList(oldEdges)
-    
+
+    //println(oldEdges)
+    //println(newEdges)
+
     // maintain demographic constraints
     val oldDemog = edgeListDemog(oldEdges)
     val newDemog = edgeListDemog(newEdges)
-    if (oldDemog != newDemog) {
-      //println("FAIL: demographic constraints")
-      return false
-    }
+    if (oldDemog != newDemog) return (initNet, false)
+
+    val oldSibCounts = sibCounts
 
     removeEdges(oldEdges)
 
     // parent overlap
-    if (parentOverlap(newEdges)) {
-      //println("FAIL: parent overlap")
-      // restore initil state
-      addEdges(oldEdges)
-      return false
-    }
+    if (parentOverlap(newEdges)) return (initNet, false)
 
     addEdges(newEdges)
 
@@ -174,36 +197,46 @@ class Network (peopleList: List[Array[String]]) {
     updateDescendents()
 
     // check loops
-    if (!checkLoops) {
-      //println("FAIL: loops")
-      // restore initil state
-      removeEdges(newEdges)
-      addEdges(oldEdges)
-      clearDescendents()
-      updateDescendents()
-      return false
-    }
+    if (!checkLoops) return (initNet, false)
+
+    clearChildren()
+    updateChildren()
+    clearSiblings()
+    updateSiblings()
+    val newSibCounts = sibCounts
+
+    //println(oldSibCounts)
+    //println(newSibCounts)
+    if (oldSibCounts != newSibCounts) return (initNet, false)
 
     replaceEdges(oldEdges, newEdges)
 
-    true
+    (this, true)
   }
 
-  def swap(k: Int): Int = {
+  def swap(k: Int): (Network, Int) = {
     var count = 0
+    var net = new Network(this)
     while (true) {
       count += 1
-      if (randomSwap(k)) return count
+      val res = net.randomSwap(k)
+      if (res._2) return (res._1, count)
+      net = res._1
     }
 
-    -1
+    assert(false)
+    (this, -1)
   }
 
-  def shuffle(k: Int) = {
+  def shuffle(k: Int): Network = {
+    var net = this
     val n = edges.size / k
     for (i <- 1 to n) {
-      println("swap #" + i + " [" + swap(k) + "]")
+      val res = net.swap(k)
+      net = res._1
+      println("swap #" + i + " [" + res._2 + "]")
     }
+    net
   }
 
   def save(filePath: String) = {
@@ -217,33 +250,59 @@ class Network (peopleList: List[Array[String]]) {
   override def toString: String = {
     "total people:" + totalPeople + "; men: " + menCount + "; women: " + womenCount + "\n"
   }
+
+  def printDiffs(that: Network) = {
+    println("=====> DIFFS")
+    for (pid <- people.keys)
+      if (people(pid) != that.people(pid)) {
+         println(that.people(pid))
+         println(people(pid))
+         println("-") 
+      }
+  }
+
+  def consistencyCheck: Boolean = {
+    for (p <- people.values) {
+      if (p.fatherId > 0)
+        if (people(p.fatherId).sex != "H") return false
+      if (p.motherId > 0)
+        if (people(p.motherId).sex != "F") return false
+    }
+
+    for (e <- edges) {
+      val childId = e._2
+      val parentId = e._1
+      if ((people(childId).fatherId != parentId) && (people(childId).motherId != parentId)) 
+        return false
+    }
+
+    return true
+  }
 }
 
 object Network {
-  def net(filePath: String): Network = {
+  def apply(filePath: String): Network = {
     val s = Source.fromFile(filePath)
     val people = (for (line <- s.getLines) yield line.split("\t")).toList.drop(1)
-    val n = new Network(people)
-    n.updateChildren()
-    n.updateSiblings()
-    n.updateDescendents()
-    n
+    new Network(people)
   }
 
   def main(args: Array[String]) {
-    val n = Network.net("Chimane6.txt")
+    val n = Network("Chimane6.txt")
     println(n)
     println("avg descendents: " + n.avgDescendents)
     println("edge count: " + n.edges.size)
 
     println("sibling counts: " + n.sibCounts)
-    /*
-    n.shuffle(8)
+
+    println("consistent: " + n.consistencyCheck)
+
+    n.shuffle(4)
 
     println(n)
     println("avg descendents: " + n.avgDescendents)
     println("edge count: " + n.edges.size)
 
-    n.save("test.txt") */
+    n.save("test.txt")
   }
 }

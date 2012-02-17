@@ -20,6 +20,8 @@ class Person(val id: Int, val name: String, val sex: String, var fatherId: Int, 
     }
   }
 
+  def distance(that: Person): Int = (if (fatherId == that.fatherId) 0 else 1) + (if (motherId == that.motherId) 0 else 1)
+
   def addChild(childId: Int) = children += childId
   def isChild(childId: Int): Boolean = children.contains(childId)
   def clearChildren() = children = Set[Int]()

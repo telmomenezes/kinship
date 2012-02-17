@@ -4,6 +4,7 @@ import com.telmomenezes.Aux._
 import scala.io.Source
 import scala.util.Random
 import scala.collection.mutable.{Map => MMap}
+import scala.collection.mutable.{Set => MSet}
 
 class Network (val people: Map[Int, Person]) {
   val totalPeople = people.size
@@ -20,6 +21,8 @@ class Network (val people: Map[Int, Person]) {
   updateSiblings()
   updateDescendents()
 
+  //println("cc: " + consistencyCheck)
+
   def this(peopleList: List[Array[String]]) = this((for (item <- peopleList) yield (item(0).toInt, new Person(item))).toMap)
 
   def this(net: Network) = this((for (p <- net.people) yield (p._1, new Person(p._2))).toMap)
@@ -30,6 +33,8 @@ class Network (val people: Map[Int, Person]) {
       case _ => false
     }
   }
+
+  def distance(that: Network) = (for (p <- people.values) yield p.distance(that.people(p.id))).reduceLeft(_ + _)
 
   def updateChildren() = {
     for (p <- people.values) {
@@ -103,7 +108,11 @@ class Network (val people: Map[Int, Person]) {
     avg
   }
   
-  def randomEdgeList(k: Int): List[(Int, Int)] = (for (i <- 0 until k) yield edges(rand.nextInt(edges.size))).toList
+  def randomEdgeList(k: Int): List[(Int, Int)] = {
+    val indexes = MSet[Int]()
+    while (indexes.size < k) indexes += rand.nextInt(edges.size)
+    (for (i <- indexes) yield edges(i)).toList
+  }
 
   def swappedEdgeList(edgeList: List[(Int, Int)]) = {
     val k = edgeList.size
@@ -117,13 +126,6 @@ class Network (val people: Map[Int, Person]) {
     val fh = edgeList.count(e => (people(e._1).sex == "F") && (people(e._2).sex == "H"))
     val ff = edgeList.count(e => (people(e._1).sex == "F") && (people(e._2).sex == "F"))
     (hh, hf, fh, ff)
-  }
-
-  def replaceEdges(oldEdges: List[(Int, Int)], newEdges: List[(Int, Int)]) = {
-    // update edge array
-    for (i <- 0 until edges.size)
-      for (j <- 0 until oldEdges.size)
-        if (edges(i) == oldEdges(j)) edges(i) = newEdges(j)
   }
 
   def markSwaps(oldEdges: List[(Int, Int)], newEdges: List[(Int, Int)]) = {
@@ -180,58 +182,69 @@ class Network (val people: Map[Int, Person]) {
   }
 
   def randomSwap(k: Int): (Network, Boolean) = {
-    val initNet = new Network(this)
+    val net = new Network(this)
 
-    val oldEdges = randomEdgeList(k)
-    val newEdges = swappedEdgeList(oldEdges)
+    val oldEdges = net.randomEdgeList(k)
+    val newEdges = net.swappedEdgeList(oldEdges)
 
     //println(oldEdges)
     //println(newEdges)
 
     // maintain demographic constraints
-    val oldDemog = edgeListDemog(oldEdges)
-    val newDemog = edgeListDemog(newEdges)
-    if (oldDemog != newDemog) return (initNet, false)
+    val oldDemog = net.edgeListDemog(oldEdges)
+    val newDemog = net.edgeListDemog(newEdges)
+    if (oldDemog != newDemog) {
+      //println("! demographic")
+      return (this, false)
+    }
 
     val oldSibCounts = sibCounts
 
-    removeEdges(oldEdges)
+    //println(oldEdges)
+    //println(newEdges)
+    net.removeEdges(oldEdges)
 
     // parent overlap
-    if (parentOverlap(newEdges)) return (initNet, false)
+    if (net.parentOverlap(newEdges)) {
+      //println("! parent overlap")
+      return (this, false)
+    }
 
-    addEdges(newEdges)
+    net.addEdges(newEdges)
 
-    clearDescendents()
-    updateDescendents()
+    net.clearDescendents()
+    net.updateDescendents()
 
     // check loops
-    if (!checkLoops) return (initNet, false)
+    if (!net.checkLoops) {
+      //println("! loops")
+      return (this, false)
+    }
 
-    clearChildren()
-    updateChildren()
-    clearSiblings()
-    updateSiblings()
-    val newSibCounts = sibCounts
+    net.clearChildren()
+    net.updateChildren()
+    net.clearSiblings()
+    net.updateSiblings()
+    val newSibCounts = net.sibCounts
 
     //println(oldSibCounts)
     //println(newSibCounts)
     //if (oldSibCounts != newSibCounts) return (initNet, false)
 
-    replaceEdges(oldEdges, newEdges)
-    markSwaps(oldEdges, newEdges)
+    //replaceEdges(oldEdges, newEdges)
+    net.markSwaps(oldEdges, newEdges)
 
-    (this, true)
+    (net, true)
   }
 
   def swap(k: Int): (Network, Int) = {
     var count = 0
-    var net = new Network(this)
+    var net = this
     while (true) {
       count += 1
       val res = net.randomSwap(k)
-      if (res._2) return (res._1, count)
       net = res._1
+      if (res._2) return (net, count)
     }
 
     assert(false)
@@ -239,12 +252,17 @@ class Network (val people: Map[Int, Person]) {
   }
 
   def shuffle(k: Int): Network = {
+    var origNet = new Network(this)
     var net = this
     val n = edges.size / k
     for (i <- 1 to n) {
       val res = net.swap(k)
       net = res._1
-      println("swap #" + i + " [" + res._2 + "] total swaps: " + net.totalSwaps)
+      val dist = net.distance(origNet)
+      val relSwaps = (net.totalSwaps.toDouble / net.edges.size.toDouble) * 100
+      val relDist = (dist.toDouble / net.edges.size.toDouble) * 100
+      println("swap #" + i + " [" + res._2 + "]; total swaps: " + net.totalSwaps
+        + "(" + relSwaps + "%); distance: " + dist + "(" + relDist + "%)")
     }
     net
   }
